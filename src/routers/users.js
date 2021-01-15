@@ -31,7 +31,7 @@ router
     }
   )
   .get(
-    // TODO: add pagination
+    // TODO: add pagination: req.query.page and req.query.per-page
     '/users',
     async (req, res) => {
       try {
