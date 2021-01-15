@@ -47,3 +47,27 @@ exports.validateNewUserBody = async (req, res, next) => {
 
   await next()
 }
+
+exports.validateNewArticleBody = async (req, res, next) => {
+  const { title, text } = req.body
+
+  const errors = []
+  
+  if (title === undefined || title.trim() === '') {
+    errors.push({
+      message: 'Article title is required.'
+    })
+  }
+
+  if (text === undefined || text.trim() === '') {
+    errors.push({
+      message: 'Article text is required.'
+    })
+  }
+
+  if (errors.length > 0) {
+    return res.status(400).json({ errors })
+  }
+
+  await next()
+}
