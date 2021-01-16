@@ -27,7 +27,11 @@ const articleSchema = new Schema({
   published: {
     type: Boolean,
     default: false
-  }
+  },
+  comments: [{
+    type: Schema.Types.ObjectId,
+    ref: 'Comment',
+  }]
 }, { timestamps: true })
 
 module.exports = model('Article', articleSchema)
