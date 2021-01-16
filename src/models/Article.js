@@ -29,7 +29,7 @@ const articleSchema = new Schema({
     default: false
   },
   comments: [{
-    type: Schema.Types.ObjectId,
+    type: Schema.Types.String,
     ref: 'Comment',
   }]
 }, { timestamps: true })
