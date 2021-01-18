@@ -19,7 +19,9 @@ router
         const article = await Article.findOne({ slug: articleSlug })
         if (article && text && text.trim() !== '') {
           const newComment = new Comment({ article: article.slug, author: author._id, text })
-          const comment = await newComment.save()
+          await newComment.save()
+          const comment = await Comment.findById(newComment._id)
+            .populate({ path: 'author', select: { _id: 1, firstName: 1, lastName: 1 } })
 
           res.status(201).json({
             data: {
@@ -34,21 +36,19 @@ router
       }
     }
   )
-  .get(
-    '/comments/:articleSlug',
+  .delete(
+    '/comments/:commentId',
+    authenticate,
     async (req, res) => {
       try {
-        const { articleSlug } = req.params
-
-        const comments = await Comment.find({ article: articleSlug }).sort('-createdAt')
-
-        res.json({
-          data: {
-            comments
-          }
-        })
+        const comment = await Comment.findById(req.params.commentId)
+        if (comment.author === res.locals.me._id) {
+          await Comment.deleteOne({ _id: req.params.commentId})
+        }
+        res.end()
       } catch (err) {
-        res.status(500).json({ err })
+        console.log(err);
+        res.status(500).json(err)
       }
     }
   )

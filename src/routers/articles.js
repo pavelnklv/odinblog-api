@@ -4,6 +4,7 @@ const authenticate = require('../middlewares/authenticate')
 const { validateNewArticleBody } = require('../middlewares/validators')
 const slugify = require('../utils/slugify')
 const Article = require('../models/Article')
+const Comment = require('../models/Comment')
 
 const router = Router()
 
@@ -36,7 +37,7 @@ router
     '/articles',
     async (req, res) => {
       try {
-        let { page, limit, sort } = req.query
+        let { page, limit, sort} = req.query
         const skip = (page - 1) * limit
         limit = Number.parseInt(limit)
 
@@ -72,38 +73,21 @@ router
     }
   )
   .get(
-    '/articles/drafts',
+    '/articles/me/drafts',
     authenticate,
     async (req, res) => {
       try {
-        let { page, limit } = req.query
-        const skip = (page - 1) * limit
-        limit = Number.parseInt(limit)
-
-        const articles = await Article.find({ published: false })
-          .populate({
-            path: 'author',
-            select: {
-              _id: 1,
-              firstName: 1,
-              lastName: 1
-            }
+        console.log(res.locals.me._id)
+        const articles = await Article.find({
+            published: false,
+            author: res.locals.me._id
           })
           .select({ comments: 0 })
           .sort('-createdAt')
-          .skip(skip)
-          .limit(limit)
-
-        const pagesCount = await Article.countDocuments() / limit
 
         res.json({
           data: {
             articles
-          },
-          meta: {
-            pagesCount,
-            skip,
-            limit
           }
         })
       } catch (err) {
@@ -111,6 +95,7 @@ router
       }
     }
   )
+
   .get(
     '/articles/:slug',
     async (req, res) => {
@@ -130,6 +115,26 @@ router
         }
       } catch (err) {
         res.status(500).end(err)
+      }
+    }
+  )
+  .get(
+    '/articles/:articleSlug/comments',
+    async (req, res) => {
+      try {
+        const { articleSlug } = req.params
+
+        const comments = await Comment.find({ article: articleSlug })
+          .populate({ path: 'author', select: { _id: 1, firstName: 1, lastName: 1 }})
+          .sort('-createdAt')
+
+        res.json({
+          data: {
+            comments
+          }
+        })
+      } catch (err) {
+        res.status(500).json({ err })
       }
     }
   )
