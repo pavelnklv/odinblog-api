@@ -3,6 +3,8 @@ const { json: jsonParser } = require('body-parser')
 const bcryptjs = require('bcryptjs')
 const { validateNewUserBody } = require('../middlewares/validators')
 const User = require('../models/User')
+const authenticate = require('../middlewares/authenticate')
+const { generateJWT } = require('../utils/jwt')
 
 const router = Router()
 
@@ -20,9 +22,12 @@ router
         const newUser = new User({ firstName, lastName, email, passwordHash, about })
         const user = await newUser.save()
 
+        const token = generateJWT(user._id, user.firstName, user.lastName, user.about)
+
         res.status(201).json({
           data: {
-            user
+            user,
+            token
           }
         })
       } catch (err) {
@@ -39,6 +44,21 @@ router
         const users = await User.find().select('firstName lastName about').sort({ lastName: -1 })
         res.json({
           users
+        })
+      } catch (err) {
+        res.status(500).json(err)
+      }
+    }
+  )
+  .get(
+    '/me',
+    authenticate,
+    async (req, res) => {
+      try {
+        res.json({
+          data: {
+            me: res.locals.me
+          }
         })
       } catch (err) {
         res.status(500).json(err)
