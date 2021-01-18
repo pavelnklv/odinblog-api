@@ -41,11 +41,15 @@ router
     authenticate,
     async (req, res) => {
       try {
+        const me = res.locals.me
         const comment = await Comment.findById(req.params.commentId)
-        if (comment.author === res.locals.me._id) {
-          await Comment.deleteOne({ _id: req.params.commentId})
+        if (!comment) {
+          return res.end()
+        } else if (comment.author.toString() !== me._id.toString()) {
+          return res.status(403).json({ message: 'Forbidden' })
         }
-        res.end()
+        await Comment.deleteOne({ _id: req.params.commentId})
+        return res.end()
       } catch (err) {
         console.log(err);
         res.status(500).json(err)
