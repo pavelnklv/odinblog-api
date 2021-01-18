@@ -10,6 +10,7 @@ module.exports = async (req, res, next) => {
     if (tokenType === 'Bearer' || JWTPayload) {
 
       res.locals.me = await User.findById(JWTPayload.id)
+        .select({ following: 0, passwordHash: 0, updatedAt: 0, __v: 0 })
 
       await next()
     }

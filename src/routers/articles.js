@@ -36,13 +36,21 @@ router
     '/articles',
     async (req, res) => {
       try {
-        let { page, limit } = req.query
+        let { page, limit, sort } = req.query
         const skip = (page - 1) * limit
         limit = Number.parseInt(limit)
 
-        const articles = await Article.find()
-          .populate('author')
-          .sort('-createdAt')
+        const articles = await Article.find({ published: true })
+          .populate({
+            path: 'author',
+            select: {
+              _id: 1,
+              firstName: 1,
+              lastName: 1
+            }
+          })
+          .select({ comments: 0 })
+          .sort(sort || '-createdAt')
           .skip(skip)
           .limit(limit)
           
@@ -56,10 +64,50 @@ router
             pagesCount,
             skip,
             limit
-          }
+          },
         })
       } catch (err) {
         res.status(500).json(err)
+      }
+    }
+  )
+  .get(
+    '/articles/drafts',
+    authenticate,
+    async (req, res) => {
+      try {
+        let { page, limit } = req.query
+        const skip = (page - 1) * limit
+        limit = Number.parseInt(limit)
+
+        const articles = await Article.find({ published: false })
+          .populate({
+            path: 'author',
+            select: {
+              _id: 1,
+              firstName: 1,
+              lastName: 1
+            }
+          })
+          .select({ comments: 0 })
+          .sort('-createdAt')
+          .skip(skip)
+          .limit(limit)
+
+        const pagesCount = await Article.countDocuments() / limit
+
+        res.json({
+          data: {
+            articles
+          },
+          meta: {
+            pagesCount,
+            skip,
+            limit
+          }
+        })
+      } catch (err) {
+        res.status(500).json({ error: { message: 'Internal Server Error' } })
       }
     }
   )
@@ -68,12 +116,18 @@ router
     async (req, res) => {
       try {
         const article = await Article.findOne({ slug: req.params.slug }).populate('author')
+        if (article) {
+          article.views++;
+          await article.save
 
-        res.json({
-          data: {
-            article
-          }
-        })
+          res.json({
+            data: {
+              article
+            }
+          })
+        } else {
+          res.status(404).json({ error: { message: 'Not Found' }})
+        }
       } catch (err) {
         res.status(500).end(err)
       }

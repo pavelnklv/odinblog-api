@@ -13,10 +13,14 @@ const articleSchema = new Schema({
   text: {
     type: String
   },
-  votes: {
+  views: {
     type: Number,
     default: 0
   },
+  votes: [{
+    type: Schema.Types.ObjectId,
+    ref: 'User',
+  }],
   author: {
     type: Schema.Types.ObjectId,
     ref: 'User'
