@@ -138,5 +138,46 @@ router
       }
     }
   )
+  .put(
+    '/articles/:slug',
+    authenticate,
+    jsonParser(),
+    async (req, res) => {
+      try {
+        const { title, text, tags, published } = req.body
+        const article = await Article.findOne({ slug: req.params.slug })
+        if (!article) {
+          return res.status(404).json({ error: { message: 'Not Found' } })
+        }
+        if (article.author.toString() != res.locals.me._id) {
+          return res.status(403).json({ error: { message: 'Forbidden' } })
+        }
+
+        const newSlug = `${slugify(title)}-${article.slug.split('-')[article.slug.split('-').length - 1]}`
+
+        await Article.updateOne({ slug: req.params.slug }, {
+          slug: newSlug,
+          title,
+          text,
+          tags,
+          published
+        })
+
+        const updatedArticle = await Article.findOne({ slug: newSlug })
+
+        res.json({
+          data: {
+            article: updatedArticle,
+          }
+        })
+      } catch (err) {
+        console.log(err);
+        res.status(500).json({err})
+      }
+    }
+  )
+  // .delete(
+
+  // )
 
 module.exports = router
