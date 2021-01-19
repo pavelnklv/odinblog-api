@@ -176,8 +176,25 @@ router
       }
     }
   )
-  // .delete(
-
-  // )
+  .delete(
+    '/articles/:slug',
+    authenticate,
+    async (req, res) => {
+      try {
+        const me = res.locals.me
+        const article = await Article.findOne({ slug: req.params.slug })
+        if (!article) {
+          return res.end()
+        } else if (article.author.toString() !== me._id.toString()) {
+          return res.status(403).json({ message: 'Forbidden' })
+        }
+        await Article.deleteOne({ slug: req.params.slug })
+        return res.end()
+      } catch (err) {
+        console.log(err);
+        res.status(500).json({ err })
+      }
+    }
+  )
 
 module.exports = router
