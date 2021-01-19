@@ -102,8 +102,8 @@ router
       try {
         const article = await Article.findOne({ slug: req.params.slug }).populate('author')
         if (article) {
-          article.views++;
-          await article.save
+          await Article.updateOne({ slug: req.params.slug }, { views: article.views + 1 })
+          article.views++
 
           res.json({
             data: {
