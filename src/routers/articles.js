@@ -153,17 +153,14 @@ router
           return res.status(403).json({ error: { message: 'Forbidden' } })
         }
 
-        const newSlug = `${slugify(title)}-${article.slug.split('-')[article.slug.split('-').length - 1]}`
-
         await Article.updateOne({ slug: req.params.slug }, {
-          slug: newSlug,
           title,
           text,
           tags,
           published
         })
 
-        const updatedArticle = await Article.findOne({ slug: newSlug })
+        const updatedArticle = await Article.findOne({ slug: req.params.slug })
 
         res.json({
           data: {
