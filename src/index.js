@@ -10,7 +10,7 @@ const commentsRouter = require('./routers/comments')
 
 const app = express()
 app.use(cors({
-  origin: 'https://quiet-hollows-84016.herokuapp.com/'
+  origin: 'https://quiet-hollows-84016.herokuapp.com'
 }))
 
 app.use('/api', usersRouter)
